@@ -1,2 +1,24 @@
 ---
-# tasks file for ansible_pcloud
+- name: check for appimage (since integrate appimages renames with checksum)
+  ansible.builtin.find:
+    paths: "{{ appimage_dir }}"
+    patterns: "^[pP][cC]loud.+[aA]pp[iI]mage$"
+    use_regex: true
+  register: file_check
+
+- block:
+    # api code from https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=pcloud-drive
+    - name: Query for url
+      ansible.builtin.uri:
+        url: https://api.pcloud.com/getpublinkdownload?code=XZhAHEXZosQwxLsipo4qKkX7Enggrk1UNqFk
+        return_content: yes
+      register: res
+
+    - name: Download
+      become: true
+      ansible.builtin.get_url:
+        url: "https://{{ res.json.hosts[1] }}{{ res.json.path }}"
+        dest: "{{ appimage_dir }}/pCloud.AppImage"
+        mode: 0755 # -rwxr-xr-x
+      notify: "integrate appimages"
+  when: "file_check.matched == 0"
