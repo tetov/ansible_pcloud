@@ -15,7 +15,6 @@
       register: res
 
     - name: Download
-      become: true
       ansible.builtin.get_url:
         url: "https://{{ res.json.hosts[1] }}{{ res.json.path }}"
         dest: "{{ appimage_dir }}/pCloud.AppImage"
